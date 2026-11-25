@@ -10,8 +10,23 @@ import type { Ratt, Vader, FetchFn } from "./typer";
 //    - Svarar servern med fel (svar.ok är false): kasta new Error(`Servern svarade ${svar.status}`)
 //    - Annars: returnera await svar.json().
 //    Tips: fetch kastar INTE fel för 404 eller 500. Du måste själv kolla svar.ok.
-export async function hamtaJson(url: string, fetchFn: FetchFn = fetch): Promise<unknown> {
+export async function hamtaJson(
+  url: string,
+  fetchFn: FetchFn = fetch,
+): Promise<unknown> {
   // TODO
+  let svar;
+
+  try {
+    svar = await fetchFn(url);
+  } catch {
+    throw new Error("Kunde inte nå servern. Kontrollera din anslutning.");
+  }
+  if (!svar.ok) {
+    throw new Error(`Servern svarade ${svar.status}`);
+  }
+
+  return await svar.json();
 }
 
 // 2. Hämta menyn från "data/meny.json" med hamtaJson.
@@ -25,7 +40,11 @@ export async function hamtaMeny(fetchFn: FetchFn = fetch): Promise<Ratt[]> {
 //    Svaret har data.current med temperature_2m, wind_speed_10m och weather_code.
 //    Returnera { temperatur, vindhastighet, kod }.
 //    Saknas data.current: kasta new Error("Oväntat svar från väder-API:et").
-export async function hamtaVader(lat: number, lon: number, fetchFn: FetchFn = fetch): Promise<Vader> {
+export async function hamtaVader(
+  lat: number,
+  lon: number,
+  fetchFn: FetchFn = fetch,
+): Promise<Vader> {
   // TODO
 }
 
