@@ -52,6 +52,19 @@ function ritaMeny(): void {
 //   - vidForsokIgen: laddaMenyn själv (så att knappen "Försök igen" fungerar).
 //   - visaKlar: spara tillstand.ratter i variabeln meny, anropa ritaMeny() och uppdatera ordern med visaOrder.
 function laddaMenyn(): void {
+  laddaMeny(
+    () => hamtaMeny(),
+    (tillstand) => {
+      visaTillstand(lista, tillstand, {
+        vidForsokIgen: laddaMenyn,
+        visaKlar: (_container, klarMeny) => {
+          meny = klarMeny.ratter;
+          ritaMeny();
+          visaOrder(orderRef, order, meny);
+        },
+      });
+    },
+  );
 }
 
 kopplaFilter(filterGrupp, (filter) => {
@@ -79,16 +92,35 @@ hamta("#rensa-order").addEventListener("click", () => {
 
 // ---- Vädret ----
 // Vid reservläge byter vi ut fetch mot en funktion som läser en lokal fil.
-const vaderFetch: FetchFn = ANVAND_RESERVDATA ? () => fetch("data/vader-stockholm.json") : fetch;
+const vaderFetch: FetchFn = ANVAND_RESERVDATA
+  ? () => fetch("data/vader-stockholm.json")
+  : fetch;
 
 // TODO 2: Skriv laddaVader(). Hämta vald stad: STADER[stadVal.value].
 //   Anropa laddaData(() => hamtaVader(stad.lat, stad.lon, vaderFetch), vidTillstand).
 //   I vidTillstand: visaTillstand(vaderResultat, tillstand, { vidForsokIgen: laddaVader, visaKlar }).
 //   visaKlar ska anropa visaVader(container, stad.namn, tillstand.data).
 function laddaVader(): void {
+  const stad = STADER[stadVal.value];
+
+  laddaData(
+    () => hamtaVader(stad.lat, stad.lon, vaderFetch),
+    (tillstand) => {
+      visaTillstand(vaderResultat, tillstand, {
+        vidForsokIgen: laddaVader,
+        visaKlar: (container, klar) =>
+          visaVader(container, stad.namn, klar.data),
+      });
+    },
+  );
 }
 
 // TODO 3: Lyssna på submit på vaderForm. Anropa preventDefault och sedan laddaVader().
+vaderForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  laddaVader();
+});
 
 // ---- Start ----
 visaOrder(orderRef, order, meny);
